@@ -93,7 +93,7 @@
     <!-- 媒體容器 -->
     <div id="media-container">
         <img id="bg-image" class="media-item">
-        <video id="bg-video" class="media-item" muted loop playsinline></video>
+        <video id="bg-video" class="media-item" loop playsinline></video>
     </div>
 
     <div class="overlay"></div>
@@ -188,6 +188,9 @@
             video.style.display = "none";
             video.pause();
             video.src = "";
+
+            video.muted = false;
+
             const formats = ['jpg', 'png', 'JPG', 'PNG', 'mp4', 'mov', 'MOV', 'MP4'];
             tryLoad(num, 0, formats);
         }
@@ -199,12 +202,30 @@
             if (['jpg', 'png', 'JPG', 'PNG'].includes(fmt)) {
                 const tImg = new Image();
                 tImg.src = path;
-                tImg.onload = () => { img.src = path; img.style.display = "block"; };
+                tImg.onload = () => { 
+                    img.src = path; 
+                    img.style.display = "block";
+                    // 如果是照片，恢復背景音樂播放
+                    if (music.paused) music.play();
+                };
                 tImg.onerror = () => tryLoad(num, idx + 1, fmts);
             } else {
                 const tVid = document.createElement('video');
                 tVid.src = path;
-                tVid.onloadedmetadata = () => { video.src = path; video.style.display = "block"; video.play(); };
+                tVid.onloadedmetadata = () => { 
+                    video.src = path; 
+                    video.style.display = "block"; 
+                    
+                    // 關鍵：播放影片前暫停背景音樂，避免聲音重疊
+                    music.pause(); 
+                    musicBtn.innerText = "🎵"; // 更新按鈕狀態
+
+                    video.play().catch(e => {
+                        console.log("自動播放被攔截，嘗試靜音播放:", e);
+                        video.muted = true; // 如果被攔截，才退而求其次用靜音播放
+                        video.play();
+                    }); 
+                };
                 tVid.onerror = () => tryLoad(num, idx + 1, fmts);
             }
         }
