@@ -1,209 +1,25 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>我們的時光機</title>
-    <style>
-        body, html {
-            height: 100%; margin: 0; padding: 0;
-            background-color: #000; color: white;
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden;
-        }
-
-        /* 媒體顯示區 */
-        #media-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; display: flex; justify-content: center; align-items: center;
-        }
-
-        .media-item {
-            max-width: 100%; max-height: 100%;
-            width: auto; height: auto;
-            object-fit: contain;
-            position: absolute; display: none;
-        }
-
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4); z-index: 2;
-        }
-
-        .content { position: relative; z-index: 3; text-align: center; width: 90%; }
-        .main-days { font-size: 3.5rem; font-weight: bold; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
-        .sub-days { font-size: 1.8rem; color: #ffeb3b; margin: 15px 0; text-shadow: 1px 1px 5px rgba(0,0,0,0.8); }
-        
-        .btn-plus {
-            width: 75px; height: 75px; border-radius: 50%;
-            border: 2px solid white; background: rgba(255,255,255,0.2);
-            color: white; font-size: 2.5rem; cursor: pointer;
-            backdrop-filter: blur(5px); transition: transform 0.2s;
-            display: flex; justify-content: center; align-items: center;
-            margin: 0 auto;
-        }
-        .btn-plus:active { transform: scale(0.9); }
-
-        #card-btn {
-            display: none; padding: 12px 35px; border-radius: 30px;
-            background: #ff4d4d; color: white; border: none; 
-            font-size: 1.2rem; cursor: pointer; font-weight: bold;
-            box-shadow: 0 4px 15px rgba(255,77,77,0.4);
-        }
-
-        /* 音樂控制按鈕 */
-        #music-toggle {
-            position: fixed; top: 20px; right: 20px; z-index: 10;
-            background: rgba(0,0,0,0.5); border: 1px solid white;
-            color: white; border-radius: 50%; width: 45px; height: 45px;
-            cursor: pointer; font-size: 1.3rem;
-        }
-
-        /* 告白卡片 CSS */
-        #final-card {
-            display: none; position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); width: 85%; max-width: 350px;
-            background: rgba(255, 255, 255, 0.95); color: #333; padding: 25px;
-            border-radius: 25px; text-align: center; z-index: 100;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6); line-height: 1.8;
-            animation: fadeIn 0.6s ease-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translate(-50%, -45%); }
-            to { opacity: 1; transform: translate(-50%, -50%); }
-        }
-        .close-btn {
-            margin-top: 20px; border: none; background: #eee;
-            padding: 8px 25px; border-radius: 10px; cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- 背景音樂 -->
-    <audio id="bg-music" src="music.mp3" loop></audio>
-    <button id="music-toggle">🎵</button>
-
-    <!-- 媒體容器 -->
-    <div id="media-container">
-        <img id="bg-image" class="media-item">
-        <video id="bg-video" class="media-item" muted loop playsinline></video>
-    </div>
-
-    <div class="overlay"></div>
-
-    <!-- 主要內容 -->
+<!-- 主要內容 -->
     <div class="content">
-        <div style="opacity: 0.8; font-size: 0.9rem; letter-spacing: 1px;">2024/10/18 - 2026/05/01</div>
-        <div class="main-days" id="total-days">520 天</div>
+        <div style="opacity: 0.8; font-size: 0.9rem; letter-spacing: 1px;">2024/10/18 - 至今</div>
+        <!-- 這裡會自動變成 561 天 (隨日期增加) -->
+        <div class="main-days" id="live-days">載入中...</div> 
         <div class="sub-days" id="counter-display">第 0 天</div>
         <button class="btn-plus" id="plus-btn">+</button>
         <button id="card-btn" onclick="showCard()">查看我想對你說的話</button>
     </div>
 
-    <!-- 告白卡片 HTML -->
-    <div id="final-card">
-        <h3 style="color: #ff4d4d; margin-bottom: 15px;">致 最特別的人</h3>
-        <div id="card-text" style="font-size: 0.95rem; text-align: left; color: #444; max-height: 60vh; overflow-y: auto;"></div>
-        <button class="close-btn" onclick="document.getElementById('final-card').style.display='none'">關閉</button>
-    </div>
-
     <script>
-        const photoDays = [0, 1, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240, 245, 250, 255, 260, 265, 270, 275, 280, 285, 290, 295, 300, 305, 310, 315, 320, 325, 330, 335, 340, 345, 350, 355, 360, 365, 370, 375, 380, 385, 390, 395, 400, 405, 410, 415, 420, 425, 430, 435, 440, 445, 450, 455, 460, 465, 470, 475, 480, 485, 490, 495, 500, 505, 510, 515, 520];
-        
-        let photoIndex = -1; // 初始設為 -1，代表還沒開始
-        const img = document.getElementById("bg-image");
-        const video = document.getElementById("bg-video");
-        const plusBtn = document.getElementById("plus-btn");
-        const counterDisplay = document.getElementById("counter-display");
-        const music = document.getElementById("bg-music");
-        const musicBtn = document.getElementById("music-toggle");
+        // ... 原有的 photoDays, photoIndex 等設定 ...
 
-        // 音樂手動開關
-        musicBtn.addEventListener("click", () => {
-            if (music.paused) { music.play(); musicBtn.innerText = "⏸"; }
-            else { music.pause(); musicBtn.innerText = "🎵"; }
-        });
-
-        // 按鈕點擊事件
-        plusBtn.addEventListener("click", () => {
-            // 第一次點擊啟動音樂 (解決瀏覽器限制)
-            if (music.paused) {
-                music.play().then(() => musicBtn.innerText = "⏸").catch(() => {});
-            }
-
-            if (photoIndex < photoDays.length - 1) {
-                photoIndex++; 
-                const currentDay = photoDays[photoIndex]; 
-                
-                counterDisplay.innerText = `第 ${currentDay} 天`; 
-                updateMedia(currentDay); 
-            } else {
-                plusBtn.style.display = "none";
-                document.getElementById("card-btn").style.display = "inline-block";
-                counterDisplay.innerText = "故事還在繼續...";
-            }
-        });
-
-        function updateMedia(num) {
-            img.style.display = "none";
-            video.style.display = "none";
-            video.pause();
-            video.src = "";
-
-            // 支援的副檔名
-            const formats = ['jpg', 'png', 'JPG', 'PNG', 'mp4', 'mov', 'MOV'];
-            tryLoad(num, 0, formats);
+        // 加入這個自動計算函數
+        function updateLiveDays() {
+            const startDate = new Date("2024-10-18");
+            const today = new Date();
+            const timeDiff = today - startDate;
+            const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            document.getElementById("live-days").innerText = daysDiff + " 天";
         }
+        updateLiveDays(); // 執行它
 
-        function tryLoad(num, idx, fmts) {
-            if (idx >= fmts.length) return;
-            const fmt = fmts[idx];
-            const path = `${num}.${fmt}`;
-
-            if (['jpg', 'png', 'JPG', 'PNG'].includes(fmt)) {
-                const tImg = new Image();
-                tImg.src = path;
-                tImg.onload = () => { 
-                    img.src = path; 
-                    img.style.display = "block"; 
-                };
-                tImg.onerror = () => tryLoad(num, idx + 1, fmts);
-            } else {
-                // 影片處理
-                const tVid = document.createElement('video');
-                tVid.src = path;
-                tVid.onloadedmetadata = () => { 
-                    video.src = path; 
-                    video.style.display = "block"; 
-                    video.play(); 
-                };
-                tVid.onerror = () => tryLoad(num, idx + 1, fmts);
-            }
-        }
-
-        function showCard() {
-            const card = document.getElementById("final-card");
-            const textElement = document.getElementById("card-text");
-            
-            const message = `如你所見，這網站是專門為你寫的。<br>
-            你說你從來沒收過我的卡片，那我用我的方式寫給你。<br><br>
-            我想把我現在內心真實的想法全部告訴你。<br>
-            我想對你說聲對不起。因為我在上一段感情裡受了傷，那些陰影讓我變得很膽小、變得很愛武裝自己，甚至在不經意間對你不是那麼好，把那些情緒帶給了你。<br><br>
-            我承認到現在為止，我對你並沒給你我『全部的好』，甚至有時候對你很不好，常讓你受委屈。因為害怕再次受傷，我總是留了一手，沒辦法完全交付信任。<br>
-            直到分開後反覆思考，我才真正看清：原來你才是那個三觀最正、最溫柔、最可愛、全世界最善良的人。<br><br>
-            以前的我總是在保護受傷的自己，卻忘了保護那個一直在愛我的你。<br>
-            如果可以，我不想再讓過去的陰影毀掉我們的未來。我正在努力學習放下武裝，學習如何像你愛我那樣，勇敢地去愛一個人。<br><br>
-            謝謝你出現在我的生命裡，讓知道我是值得被真正愛著的。我也想讓你知道，我有多愛你。<br><br>
-            如果可以，你願意再讓我保護你嗎？<br>
-            如果你有其他想法或規劃也可以跟我說。`;
-
-            textElement.innerHTML = message;
-            card.style.display = "block";
-        }
-        
-        // 移除原有的初始化 updateMedia，讓畫面維持黑色直到第一次點擊
+        // ... 原有的 plusBtn 點擊邏輯 ...
     </script>
-</body>
-</html>
