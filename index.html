@@ -97,7 +97,7 @@
     <div class="content">
         <div style="opacity: 0.8; font-size: 0.9rem; letter-spacing: 1px;">2024/10/18 - 2026/05/01</div>
         <div class="main-days" id="total-days">520 天</div>
-        <div class="sub-days" id="counter-display">第 1 天</div>
+        <div class="sub-days" id="counter-display">點擊按鈕開始回憶</div>
         <button class="btn-plus" id="plus-btn">+</button>
         <button id="card-btn" onclick="showCard()">查看我想對你說的話</button>
     </div>
@@ -110,10 +110,9 @@
     </div>
 
     <script>
-        // 【核心設定】這裡填入妳所有的照片/影片檔名數字
         const photoDays = [0, 1, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240, 245, 250, 255, 260, 265, 270, 275, 280, 285, 290, 295, 300, 305, 310, 315, 320, 325, 330, 335, 340, 345, 350, 355, 360, 365, 370, 375, 380, 385, 390, 395, 400, 405, 410, 415, 420, 425, 430, 435, 440, 445, 450, 455, 460, 465, 470, 475, 480, 485, 490, 495, 500, 505, 510, 515, 520];
         
-        let photoIndex = -1; 
+        let photoIndex = -1; // 初始設為 -1，代表還沒開始
         const img = document.getElementById("bg-image");
         const video = document.getElementById("bg-video");
         const plusBtn = document.getElementById("plus-btn");
@@ -121,45 +120,43 @@
         const music = document.getElementById("bg-music");
         const musicBtn = document.getElementById("music-toggle");
 
-        // 音樂控制
+        // 音樂手動開關
         musicBtn.addEventListener("click", () => {
             if (music.paused) { music.play(); musicBtn.innerText = "⏸"; }
             else { music.pause(); musicBtn.innerText = "🎵"; }
         });
 
-        // 按鈕點擊事件：修正跳轉天數邏輯
+        // 按鈕點擊事件
         plusBtn.addEventListener("click", () => {
-            // 第一次點擊啟動音樂
-            if (photoIndex === 0 && music.paused) {
+            // 第一次點擊啟動音樂 (解決瀏覽器限制)
+            if (music.paused) {
                 music.play().then(() => musicBtn.innerText = "⏸").catch(() => {});
             }
 
             if (photoIndex < photoDays.length - 1) {
-                photoIndex++; // 移到陣列的下一個索引
-                const currentDay = photoDays[photoIndex]; // 取得該索引對應的「天數」
+                photoIndex++; 
+                const currentDay = photoDays[photoIndex]; 
                 
-                counterDisplay.innerText = `第 ${currentDay} 天`; // 更新畫面數字
-                updateMedia(currentDay); // 換照片/影片
+                counterDisplay.innerText = `第 ${currentDay} 天`; 
+                updateMedia(currentDay); 
             } else {
-                // 點完 103 個項目後
                 plusBtn.style.display = "none";
                 document.getElementById("card-btn").style.display = "inline-block";
+                counterDisplay.innerText = "故事還在繼續...";
             }
         });
 
-        // 換媒體的函數
         function updateMedia(num) {
             img.style.display = "none";
             video.style.display = "none";
             video.pause();
             video.src = "";
 
-            // 自動嘗試所有可能的格式
+            // 支援的副檔名
             const formats = ['jpg', 'png', 'JPG', 'PNG', 'mp4', 'mov', 'MOV'];
             tryLoad(num, 0, formats);
         }
 
-        // 遞迴嘗試載入檔案
         function tryLoad(num, idx, fmts) {
             if (idx >= fmts.length) return;
             const fmt = fmts[idx];
@@ -168,17 +165,24 @@
             if (['jpg', 'png', 'JPG', 'PNG'].includes(fmt)) {
                 const tImg = new Image();
                 tImg.src = path;
-                tImg.onload = () => { img.src = path; img.style.display = "block"; };
+                tImg.onload = () => { 
+                    img.src = path; 
+                    img.style.display = "block"; 
+                };
                 tImg.onerror = () => tryLoad(num, idx + 1, fmts);
             } else {
+                // 影片處理
                 const tVid = document.createElement('video');
                 tVid.src = path;
-                tVid.onloadedmetadata = () => { video.src = path; video.style.display = "block"; video.play(); };
+                tVid.onloadedmetadata = () => { 
+                    video.src = path; 
+                    video.style.display = "block"; 
+                    video.play(); 
+                };
                 tVid.onerror = () => tryLoad(num, idx + 1, fmts);
             }
         }
 
-        // 告白卡片顯示（內含妳修正後的文字）
         function showCard() {
             const card = document.getElementById("final-card");
             const textElement = document.getElementById("card-text");
@@ -191,16 +195,15 @@
             直到分開後反覆思考，我才真正看清：原來你才是那個三觀最正、最溫柔、最可愛、全世界最善良的人。<br><br>
             以前的我總是在保護受傷的自己，卻忘了保護那個一直在愛我的你。<br>
             如果可以，我不想再讓過去的陰影毀掉我們的未來。我正在努力學習放下武裝，學習如何像你愛我那樣，勇敢地去愛一個人。<br><br>
-            謝謝你出現在我的生命裡，讓我知道我是值得被真正愛著的。我也想讓你知道，我有多愛你。<br><br>
+            謝謝你出現在我的生命裡，讓知道我是值得被真正愛著的。我也想讓你知道，我有多愛你。<br><br>
             如果可以，你願意再讓我保護你嗎？<br>
             如果你有其他想法或規劃也可以跟我說。`;
 
             textElement.innerHTML = message;
             card.style.display = "block";
         }
-
-        // 初始化顯示第 1 張
-        updateMedia(photoDays[0]);
+        
+        // 移除原有的初始化 updateMedia，讓畫面維持黑色直到第一次點擊
     </script>
 </body>
 </html>
