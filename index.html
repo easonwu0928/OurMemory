@@ -33,7 +33,6 @@
 
         .content { position: relative; z-index: 3; text-align: center; width: 90%; }
         
-        /* 讓大數字看起來可以點擊 */
         .main-days { 
             font-size: 3.5rem; font-weight: bold; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); 
             cursor: pointer; 
@@ -86,29 +85,25 @@
 </head>
 <body>
 
-    <!-- 背景音樂 -->
     <audio id="bg-music" src="music.mp3" loop></audio>
     <button id="music-toggle">🎵</button>
 
-    <!-- 媒體容器 -->
     <div id="media-container">
         <img id="bg-image" class="media-item">
+        <!-- 移除 HTML 上的 muted -->
         <video id="bg-video" class="media-item" loop playsinline></video>
     </div>
 
     <div class="overlay"></div>
 
-    <!-- 主要內容 -->
     <div class="content">
         <div style="opacity: 0.8; font-size: 0.9rem; letter-spacing: 1px;">2024/10/18 - 至今</div>
-        <!-- 點擊此處可手動輸入天數 -->
         <div class="main-days" id="live-days" onclick="jumpToDay()">計算中...</div>
         <div class="sub-days" id="counter-display">第 0 天</div>
         <button class="btn-plus" id="plus-btn">+</button>
         <button id="card-btn" onclick="showCard()">查看我想對你說的話</button>
     </div>
 
-    <!-- 告白卡片 -->
     <div id="final-card">
         <h3 style="color: #ff4d4d; margin-bottom: 15px;">致 最特別的人</h3>
         <div id="card-text" style="font-size: 0.95rem; text-align: left; color: #444; max-height: 60vh; overflow-y: auto;"></div>
@@ -116,10 +111,9 @@
     </div>
 
     <script>
-        // 【核心設定】
         const photoDays = [0, 1, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240, 245, 250, 255, 260, 265, 270, 275, 280, 285, 290, 295, 300, 305, 310, 315, 320, 325, 330, 335, 340, 345, 350, 355, 360, 365, 370, 375, 380, 385, 390, 395, 400, 405, 410, 415, 420, 425, 430, 435, 440, 445, 450, 455, 460, 465, 470, 475, 480, 485, 490, 495, 500, 505, 510, 515, 520];
         
-        let photoIndex = 0; // 從索引 0 (第 0 天) 開始
+        let photoIndex = 0;
         const img = document.getElementById("bg-image");
         const video = document.getElementById("bg-video");
         const plusBtn = document.getElementById("plus-btn");
@@ -127,7 +121,6 @@
         const music = document.getElementById("bg-music");
         const musicBtn = document.getElementById("music-toggle");
 
-        // 自動計算至今總天數
         function updateLiveDays() {
             const startDate = new Date("2024-10-18");
             const today = new Date();
@@ -137,12 +130,10 @@
         }
         updateLiveDays();
 
-        // 【新增功能】手動輸入天數跳轉
         function jumpToDay() {
             const target = prompt("想跳到第幾天？(請輸入數字)");
             if (target !== null && target !== "") {
                 const num = parseInt(target);
-                // 找尋 photoDays 中最接近（且不超過）輸入值的索引
                 let foundIdx = photoDays.findIndex(d => d >= num);
                 if (foundIdx === -1) foundIdx = photoDays.length - 1;
 
@@ -151,22 +142,23 @@
                 counterDisplay.innerText = `第 ${currentDay} 天`;
                 updateMedia(currentDay);
 
-                // 跳轉時順便啟動音樂（防止還沒點過畫面）
                 if (music.paused) {
                     music.play().then(() => musicBtn.innerText = "⏸").catch(() => {});
                 }
             }
         }
 
-        // 音樂控制
         musicBtn.addEventListener("click", () => {
             if (music.paused) { music.play(); musicBtn.innerText = "⏸"; }
             else { music.pause(); musicBtn.innerText = "🎵"; }
         });
 
-        // 按鈕點擊
         plusBtn.addEventListener("click", () => {
-            // 第一次點擊啟動音樂
+            // 關鍵修改：在第一次點擊時「啟動」影片標籤，解決靜音政策
+            if (video.paused) {
+                video.play().then(() => video.pause()).catch(() => {});
+            }
+
             if (music.paused) {
                 music.play().then(() => musicBtn.innerText = "⏸").catch(() => {});
             }
@@ -188,8 +180,10 @@
             video.style.display = "none";
             video.pause();
             video.src = "";
-
+            
+            // 明確取消靜音並設定音量
             video.muted = false;
+            video.volume = 1.0;
 
             const formats = ['jpg', 'png', 'JPG', 'PNG', 'mp4', 'mov', 'MOV', 'MP4'];
             tryLoad(num, 0, formats);
@@ -205,8 +199,8 @@
                 tImg.onload = () => { 
                     img.src = path; 
                     img.style.display = "block";
-                    // 如果是照片，恢復背景音樂播放
-                    if (music.paused) music.play();
+                    // 照片時播放背景音樂
+                    if (music.paused) music.play().then(() => musicBtn.innerText = "⏸");
                 };
                 tImg.onerror = () => tryLoad(num, idx + 1, fmts);
             } else {
@@ -216,13 +210,13 @@
                     video.src = path; 
                     video.style.display = "block"; 
                     
-                    // 關鍵：播放影片前暫停背景音樂，避免聲音重疊
+                    // 影片播放前先停背景音樂
                     music.pause(); 
-                    musicBtn.innerText = "🎵"; // 更新按鈕狀態
+                    musicBtn.innerText = "🎵";
 
                     video.play().catch(e => {
-                        console.log("自動播放被攔截，嘗試靜音播放:", e);
-                        video.muted = true; // 如果被攔截，才退而求其次用靜音播放
+                        console.log("嘗試解除靜音播放失敗，改為靜音播放:", e);
+                        video.muted = true;
                         video.play();
                     }); 
                 };
@@ -242,7 +236,7 @@
             原來你才是那個三觀最正、最溫柔、最可愛，也是全世界最善良的人。<br><br>
             以前的我總是在保護受傷的自己，卻忘了保護那個一直真正在愛我的你。<br>
             我正在努力學習，學習如何像你愛我那樣，勇敢地去愛一個人。<br><br>
-            謝謝你出現在我的生命裡，讓我知道我是值得被真正的愛著。<br>
+            謝謝你出現在我的生命裡，讓知道我是值得被真正的愛著。<br>
             而我也想讓你知道，我有多愛你。<br>
             如果可以，你願意再讓我保護你嗎？<br>
             可以的話我希望你告訴我<br>
