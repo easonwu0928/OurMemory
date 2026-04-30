@@ -32,7 +32,14 @@
         }
 
         .content { position: relative; z-index: 3; text-align: center; width: 90%; }
-        .main-days { font-size: 3.5rem; font-weight: bold; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
+        
+        /* 讓大數字看起來可以點擊 */
+        .main-days { 
+            font-size: 3.5rem; font-weight: bold; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); 
+            cursor: pointer; 
+        }
+        .main-days:active { opacity: 0.7; }
+
         .sub-days { font-size: 1.8rem; color: #ffeb3b; margin: 15px 0; text-shadow: 1px 1px 5px rgba(0,0,0,0.8); }
         
         .btn-plus {
@@ -94,7 +101,8 @@
     <!-- 主要內容 -->
     <div class="content">
         <div style="opacity: 0.8; font-size: 0.9rem; letter-spacing: 1px;">2024/10/18 - 至今</div>
-        <div class="main-days" id="live-days">計算中...</div>
+        <!-- 點擊此處可手動輸入天數 -->
+        <div class="main-days" id="live-days" onclick="jumpToDay()">計算中...</div>
         <div class="sub-days" id="counter-display">第 0 天</div>
         <button class="btn-plus" id="plus-btn">+</button>
         <button id="card-btn" onclick="showCard()">查看我想對你說的話</button>
@@ -128,6 +136,27 @@
             document.getElementById("live-days").innerText = daysDiff + " 天";
         }
         updateLiveDays();
+
+        // 【新增功能】手動輸入天數跳轉
+        function jumpToDay() {
+            const target = prompt("想跳到第幾天？(請輸入數字)");
+            if (target !== null && target !== "") {
+                const num = parseInt(target);
+                // 找尋 photoDays 中最接近（且不超過）輸入值的索引
+                let foundIdx = photoDays.findIndex(d => d >= num);
+                if (foundIdx === -1) foundIdx = photoDays.length - 1;
+
+                photoIndex = foundIdx;
+                const currentDay = photoDays[photoIndex];
+                counterDisplay.innerText = `第 ${currentDay} 天`;
+                updateMedia(currentDay);
+
+                // 跳轉時順便啟動音樂（防止還沒點過畫面）
+                if (music.paused) {
+                    music.play().then(() => musicBtn.innerText = "⏸").catch(() => {});
+                }
+            }
+        }
 
         // 音樂控制
         musicBtn.addEventListener("click", () => {
@@ -188,7 +217,7 @@
             我想把我現在內心真實的想法全部告訴你<br>
             我想先跟你說聲對不起。因為我在上一段感情裡受了傷，那些陰影讓我變得很膽小、變得很愛武裝自己，甚至在不經意間對妳不是那麼好，把那些情緒帶給了妳。<br>
             我承認，過去的我並沒給你我『全部的好』。因為害怕再次受傷，我總是留了一手，對你沒有完全信任。<br>
-            直到分開後，在這些沒有你的日子裡反覆思考，我才真正看清：<br>
+            實到分開後，在這些沒有你的日子裡反覆思考，我才真正看清：<br>
             原來你才是那個三觀最正、最溫柔、最可愛，也是全世界最善良的人。<br><br>
             以前的我總是在保護受傷的自己，卻忘了保護那個一直真正在愛我的你。<br>
             我正在努力學習，學習如何像你愛我那樣，勇敢地去愛一個人。<br><br>
